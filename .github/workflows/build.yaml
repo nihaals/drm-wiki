@@ -1,0 +1,49 @@
+name: Build and Deploy
+
+on: [push, pull_request]
+
+jobs:
+  build:
+    name: Build
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Get mdBook version
+        id: mdbook-version
+        env:
+          SEMVER_RANGE: "^0.4.4"
+        run: |
+          cargo search .
+          VERSION=$(cargo install mdbook --offline --version "${SEMVER_RANGE}" |& grep -Po "\d+\.\d+\.\d+")
+          echo "Version ${VERSION} found"
+          echo ::set-output name=version::${VERSION}
+      - name: Setup mdBook
+        uses: peaceiris/actions-mdbook@v1
+        with:
+          mdbook-version: ${{ steps.mdbook-version.outputs.version }}
+      - name: Build
+        run: mdbook build
+      - name: Upload dist
+        uses: actions/upload-artifact@v2
+        with:
+          name: dist
+          path: dist/
+
+  deploy:
+    name: Deploy
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download dist
+        uses: actions/download-artifact@v2
+        with:
+          name: dist
+          path: dist/
+      - name: Deploy
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./dist
+          user_name: "github-actions[bot]"
+          user_email: "41898282+github-actions[bot]@users.noreply.github.com"
+          commit_message: Deploy commit

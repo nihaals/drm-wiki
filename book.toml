@@ -1,0 +1,14 @@
+[book]
+authors = ["Nihaal Sangha"]
+language = "en"
+multilingual = false
+src = "src"
+title = "DRM Wiki"
+
+[build]
+build-dir = "dist"
+create-missing = false
+use-default-preprocessors = false
+
+[output.html]
+git-repository-url = "https://github.com/nihaals/drm-wiki"
